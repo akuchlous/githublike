@@ -1,4 +1,140 @@
-githublike
-==========
+Git Repo Recommendation System :
 
-github recommendation engine
+Problem:  Git Repo Recommendation System
+	Make a recommendation system for Git Repos 
+
+	A user who likes <repoN> will also like : <repo0> <repo1> <repo2> ...
+
+Data Source: http://ghtorrent.org/downloads.html : mongo dump for watchers
+
+	I downloaded the mongo dump for the repoWatchers and read it into Mongo DB
+	dumped : 
+		RepoName RepoWatcherUserId
+		Total Count : 22,660,175 
+		Total Uniq Repos : 1,515,821
+		Total Uniq Users : 1,143,507
+
+		
+Scrubbed Data Set:  
+	We have 22,660,175 unique repoWatchers (or we can say repoLikes) in format :
+	<repoName> <Watcher>
+	example:
+		facebook/fbconsole od3n
+		
+	User "od3n" watches / likes repo "facebook/fbconsole"
+
+Solution:
+	Make Two Map/dictonary : 1 -> Many 
+
+	First: Repo to User Dictionary: where we keep all the users who like a particular repo
+
+	repo2User [repo0] = [ usr1, usr2, usr5 ...]
+	repo2User [repo1] = [ usr5, usr9, usrN ...]
+
+	Second: User to Repo Dictionary: where we keep all the repos liked by a particular user
+
+	user2Repo [user0] = [ repo1, repo2, repo5 ...]
+	user2Repo [user1] = [ repo5, repo9, repoN ...]
+
+
+	Algorithm: pseudo python code
+
+	findLikes(repo):
+		like = {}
+		for usr in repo2User[repo]:
+			for repo in user2Repo[usr]:
+				if (repo not in like):
+					like[repo] = 0
+				like[repo] +=1 		## we get a likes for repos
+
+		# sort dict by key value in reverse order
+
+	for w in sorted(like, key=like.get, reverse=True):
+                print w, like[w]
+
+Single Machine :
+	Memory used = 4 GB 
+	read data = 20 seconds 
+	process data for a repo : less than a second
+
+	Pros:
+		Easy to write and process
+	Cons:
+		1.5 millions seconds to complete the repo 
+		= 17 Days of processing 
+
+TODO: find an efficient algorithm
+	Since the complexity is O(n^2), the process is really slow. 
+
+Distributed Solution 0 : 
+
+	number of uniq repos = 1,515,821
+	number of uniq usr   = 1,143,507
+	
+	I have 3 machines : 
+		spawn three jobs in parallel : distributed work 
+		maybe use Hadoop
+		
+	Cons : 
+		Time Taken :
+			17 /3 days = 6 days : Not good yet 
+		do not take advantage of multicore
+
+Distributed Solution 1 : Use multicore 
+	Machine 0 : 4 cores 
+	Machine 1 : 4 cores 
+	Machine 2 : 8 cores 
+
+
+	Not Possible: 
+		I "cannot" just spawn 4 jobs on machine 1, as each job takes >4GB memory 
+		I will run out of memory if I spawn that many jobs on machines
+
+Distributed Solution 2 :  Use Multicore, Shared memory
+
+	Machine 0 : 4 cores 
+	Machine 1 : 4 cores 
+	Machine 2 : 8 cores 
+		
+	I "cannot" just spawn 4 jobs on machine 1, as each job takes >4GB memory 
+
+	Solution:
+		Have a master process to store the data (r2u, u2r) and spawn multi child process in each machine
+
+	machine 0 : 1 master process :  Stores the data : high memory footprint 
+			4 child process  : reads data and processes : light memory footprint
+	machine 1 : 1 master process : 
+			4 child process 
+	machine 2 : 1 master process : 
+			8 child process 
+
+	Expected Result :
+		17 / 16 : 1 day to get results 
+
+
+Src Code : 
+	map.py 
+	Usage 
+		# python  <> DB/repoWatchers.txt 4 /tmp/abcd
+
+	Where format for DB/repoWatchers.txt is :
+		Chris-Cates/cc.bootstrapreference Chris-Cates
+		josephbulger/try_git josephbulger
+		facebook/fbconsole facebook
+		facebook/fbconsole mattn
+		facebook/fbconsole jamesproud
+		facebook/fbconsole ashizawa
+		facebook/fbconsole wozozo
+		facebook/fbconsole tishon
+		facebook/fbconsole od3n
+		facebook/fbconsole sudar
+		facebook/fbconsole programmer100
+		facebook/fbconsole gmas
+		facebook/fbconsole lordm
+		facebook/fbconsole mattwilliamson
+		facebook/fbconsole docent
+		facebook/fbconsole emoosx
+		facebook/fbconsole jlaborde
+		facebook/fbconsole craigkerstiens
+		facebook/fbconsole goopi
+
