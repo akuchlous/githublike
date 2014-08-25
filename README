@@ -119,7 +119,7 @@ Src Code :
 	Usage 
 		# python  <> DB/repoWatchers.txt 4 /tmp/abcd
 
-	Where format for DB/repoWatchers.txt is :
+	Where format for DB/repoWatchers.txt is : (truncated DB/repoWatchers.txt is added to src code)
 		Chris-Cates/cc.bootstrapreference Chris-Cates
 		josephbulger/try_git josephbulger
 		facebook/fbconsole facebook
@@ -140,3 +140,10 @@ Src Code :
 		facebook/fbconsole craigkerstiens
 		facebook/fbconsole goopi
 
+	original DB/repoWatchers.txt size is : 695589670 bytes, 
+	%  ls -l  ~/GitLike/DB/repoWatchers.txt 
+		-rw-r--r--  1 akuchlous  600  695589670 Aug  8 19:10 DB/repoWatchers.txt
+	% ~/GitLike/DB/repoWatchers.txt 
+ 		22660175 45320350 695589670 /Users/akuchlou/GitLike/DB/repoWatchers.txt
+
+		
